@@ -6,6 +6,8 @@ import sys
 import glob
 import pathlib
 import pickle
+import matplotlib.pyplot as plt
+import csv
 
 def binarize (img):
     img_blur = cv2.GaussianBlur(img,(31,31),0,0)
@@ -31,9 +33,14 @@ filename = 'img_search'
 imgs = glob.glob(filename + "/*.png")
 imgs.sort()
 img_ori = cv2.imread('img_ori.png', 0)
+
+f = open('search.csv', 'w')
+writer = csv.writer(f, lineterminator='\n')
+writer.writerow(['i','max_value', 'top_left','btm_right'])
+
 list_result = []
 
-test = []
+list_maxvalue = []
 mv = 0
 if __name__ == "__main__":
     
@@ -51,9 +58,11 @@ if __name__ == "__main__":
         result["maxVal"] = maxVal
         result["top_left"] = top_left
         result["btm_right"] = btm_right
-        
+        list_maxvalue.append(maxVal)
         list_result.append(result)
         mv_n = maxVal
+        writer.writerow([i,maxVal,top_left,btm_right]) 
+        print(i)
         if mv_n >= mv:
             mv = mv_n
             tl = top_left
@@ -62,10 +71,13 @@ if __name__ == "__main__":
             i_use = i
         else:
             continue
-        
+          
+    f.close
+    '''    
     cv2.rectangle(img_use,tl, br, 255, 2)
     cv2.imshow(str(i_use),img_use)
     cv2.waitKey(0)    
+    '''
 
-    with open('search.pickle', 'wb') as f:
-        pickle.dump(list_result, f)
+    #with open('search.pickle', 'wb') as f:
+        #pickle.dump(list_result, f)
