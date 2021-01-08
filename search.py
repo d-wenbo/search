@@ -18,7 +18,7 @@ def binarize (img):
 def change_imgsize(img):
     height = img.shape[0]
     width = img.shape[1]
-    ratio = 0.15/0.29
+    ratio = 0.29/0.15
     resized_img = cv2.resize(img , (int(width*ratio), int(height*ratio)))
     return resized_img
 
@@ -30,10 +30,7 @@ def template_match(img,temp):
     btm_right = (top_left[0] + w, top_left[1] + h)
     return maxVal,top_left,btm_right
 
-new_dir_path_imgs = 'imgs_binary/'
-os.makedirs(new_dir_path_imgs,exist_ok = True)
-new_dir_path_ori = 'ori_binary/'
-os.makedirs(new_dir_path_ori,exist_ok = True)
+
 
 
 
@@ -70,10 +67,10 @@ if __name__ == "__main__":
         list_result.append(result)
         writer.writerow([i,maxVal,top_left,btm_right]) 
         print(i)
-        cv2.imwrite(new_dir_path_imgs + str(i) + '.png', niti)  
+        
     f.close
    
-    cv2.imwrite(new_dir_path_ori + 'ori.png', resized_niti_ori)
+    
     
     '''    
     cv2.rectangle(img_use,tl, br, 255, 2)
