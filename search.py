@@ -1,82 +1,74 @@
 import numpy as np
 import cv2
-import random
 import os
-import sys
 import glob
-import pathlib
-import pickle
-import matplotlib.pyplot as plt
-import csv
+import json
+import argparse
 
-def binarize (img):
-    img_blur = cv2.GaussianBlur(img,(31,31),0,0)
+
+def binarize (img, ksize=31, threshold=15):
+    img_blur = cv2.GaussianBlur(img, (ksize, ksize), 0, 0)
     img_sub = cv2.subtract(img_blur,img)
-    _, binary = cv2.threshold(img_sub,15,255,cv2.THRESH_BINARY)
+    _, binary = cv2.threshold(img_sub, threshold, 255, cv2.THRESH_BINARY)
     return binary
 
-def change_imgsize(img):
+def change_imgsize(img, ratio):
     height = img.shape[0]
     width = img.shape[1]
-    ratio = 0.29/0.15
     resized_img = cv2.resize(img , (int(width*ratio), int(height*ratio)))
     return resized_img
 
-def template_match(img,temp):
-    w, h = temp.shape[::-1]
-    result = cv2.matchTemplate(img, temp, cv2.TM_CCORR_NORMED)
-    minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(result)
+def template_match(img, template):
+    w, h = template.shape[::-1]
+    result = cv2.matchTemplate(img, template, cv2.TM_CCORR_NORMED)
+    _, maxVal, _, maxLoc = cv2.minMaxLoc(result)
     top_left = maxLoc
     btm_right = (top_left[0] + w, top_left[1] + h)
-    return maxVal,top_left,btm_right
+    return maxVal, top_left, btm_right
 
 
-
-
-
-filename = 'img_search'
-imgs = glob.glob(filename + "/*.png")
-imgs.sort()
-img_ori = cv2.imread('img_ori.png', 0)
-
-f = open('search.csv', 'w')
-writer = csv.writer(f, lineterminator='\n')
-writer.writerow(['i','max_value', 'top_left','btm_right'])
-
-list_result = []
-
-list_maxvalue = []
-mv = 0
 if __name__ == "__main__":
-    
-    for i in range(len(imgs)):
-        img = cv2.imread(imgs[i], 0)
-        niti = binarize(img)
-        niti_ori = binarize(img_ori)
-        
-        resized_niti_ori = change_imgsize(niti_ori)
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--dir_name', help='directory name which contains x50 image', default='img_search')    # 必須の引数を追加
+    parser.add_argument('--original_img_name', help='name of x20 image', default='img_ori.png')
+    parser.add_argument('--ratio', default=0.29/0.15)
+    parser.add_argument('--display', default=False)
+    parser.add_argument('--output_name', default="search.json")
+    args = parser.parse_args()
 
-        maxVal , top_left,btm_right = template_match(niti,resized_niti_ori)
+    dir_name = args.dir_name
+    list_img_name = glob.glob(f'{dir_name}/*.png')
+    list_img_name.sort()
+
+    original_img_name = args.original_img_name
+    img_original = cv2.imread(original_img_name, cv2.IMREAD_GRAYSCALE)
+
+    ratio = args.ratio
+
+    dict_result = {"result":[], "dir_name": dir_name, "original_img_name": original_img_name}
+    for i in list_img_name:
+        this_basename = os.path.basename(i)
+        img = cv2.imread(i, cv2.IMREAD_GRAYSCALE)
+        img_binalized = binarize(img)
+        img_binalized_ori = binarize(img_original)
+        
+        img_resized_binalized_ori = change_imgsize(img_binalized_ori, ratio)
+        maxVal, top_left, btm_right = template_match(img_binalized, img_resized_binalized_ori)
         
         result = {}
-        result["id"] = i
+        result["img_name"] = this_basename
         result["maxVal"] = maxVal
         result["top_left"] = top_left
         result["btm_right"] = btm_right
-        list_maxvalue.append(maxVal)
-        list_result.append(result)
-        writer.writerow([i,maxVal,top_left,btm_right]) 
-        print(i)
-        
-    f.close
-   
-    
-    
-    '''    
-    cv2.rectangle(img_use,tl, br, 255, 2)
-    cv2.imshow(str(i_use),img_use)
-    cv2.waitKey(0)    
-    '''
+        dict_result["result"].append(result)
 
-    #with open('search.pickle', 'wb') as f:
-        #pickle.dump(list_result, f)
+        print(f'{this_basename}: done. maxVal: {maxVal:.3f}')
+        if args.display:
+            cv2.rectangle(img, top_left, btm_right, 255, 2)
+            cv2.imshow('img_resized_binalized_ori', img_resized_binalized_ori)
+            cv2.imshow('img', img)
+            cv2.waitKey(0)    
+
+    with open('search.json', 'w') as f:
+        json.dump(dict_result, f, indent=2, ensure_ascii=False)
+    
