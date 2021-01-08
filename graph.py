@@ -7,7 +7,9 @@ import json
 
 if __name__ == "__main__":
     
-    with open('search.json') as f:
+    json_name = sys.argv[1]
+
+    with open(json_name) as f:
         dict_result = json.load(f)
 
     list_i = []

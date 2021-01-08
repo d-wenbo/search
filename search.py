@@ -69,6 +69,6 @@ if __name__ == "__main__":
             cv2.imshow('img', img)
             cv2.waitKey(0)    
 
-    with open('search.json', 'w') as f:
+    with open(args.output_name, 'w') as f:
         json.dump(dict_result, f, indent=2, ensure_ascii=False)
     
