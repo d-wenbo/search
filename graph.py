@@ -40,7 +40,7 @@ if __name__ == "__main__":
     list_btm_right = []
 
 
-    with open('search_ano.csv') as f:
+    with open('search.csv') as f:
         reader = csv.reader(f)
         for row in reader:
             list_i.append(row[0])

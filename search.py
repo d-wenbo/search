@@ -39,7 +39,7 @@ imgs = glob.glob(filename + "/*.png")
 imgs.sort()
 img_ori = cv2.imread('img_ori.png', 0)
 
-f = open('search_ano.csv', 'w')
+f = open('search.csv', 'w')
 writer = csv.writer(f, lineterminator='\n')
 writer.writerow(['i','max_value', 'top_left','btm_right'])
 
